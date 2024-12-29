@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}المنتجات{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4 text-center">قائمة المنتجات</h1>
+    
+    {% if user.is_superuser %}
+    <div class="mb-4 text-end">
+        <a href="{% url 'product_add' %}" class="btn btn-success">
+            <i class="fas fa-plus"></i> إضافة منتج جديد
+        </a>
+    </div>
+    {% endif %}
+
+    <!-- قسم المشروبات -->
+    <h2 class="mb-3 mt-5">المشروبات <i class="fas fa-coffee"></i></h2>
+    <div class="row">
+        {% for product in products %}
+        {% if product.category == 'drinks' %}
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm border-primary">
+                {% if product.image %}
+                <img src="{{ product.image.url }}" class="card-img-top" alt="{{ product.name }}">
+                {% endif %}
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title text-primary">{{ product.name }}</h5>
+                    <p class="card-text flex-grow-1">{{ product.description }}</p>
+                    <div class="mt-auto">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="h5 mb-0 text-success">{{ product.price }} ريال</span>
+                            {% if user.is_superuser %}
+                            <div class="btn-group">
+                                <a href="{% url 'product_edit' product.id %}" class="btn btn-sm btn-warning">
+                                    <i class="fas fa-edit"></i> تعديل
+                                </a>
+                                <a href="{% url 'product_delete' product.id %}" class="btn btn-sm btn-danger">
+                                    <i class="fas fa-trash"></i> حذف
+                                </a>
+                            </div>
+                            {% elif user.is_authenticated %}
+                            <button type="button" 
+                                    class="btn btn-primary add-to-cart" 
+                                    onclick="addToCart(this)" 
+                                    data-product-id="{{ product.id }}" 
+                                    data-product-name="{{ product.name|escapejs }}">
+                                <i class="fas fa-shopping-cart"></i> أضف للسلة
+                            </button>
+                            {% else %}
+                            <a href="{% url 'login' %}" class="btn btn-secondary">
+                                <i class="fas fa-sign-in-alt"></i> سجل دخول للشراء
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        {% endfor %}
+    </div>
+
+    <!-- قسم الوجبات الخفيفة -->
+    <h2 class="mb-3 mt-5">الوجبات الخفيفة <i class="fas fa-cookie-bite"></i></h2>
+    <div class="row">
+        {% for product in products %}
+        {% if product.category == 'snacks' %}
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm border-warning">
+                {% if product.image %}
+                <img src="{{ product.image.url }}" class="card-img-top" alt="{{ product.name }}">
+                {% endif %}
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title text-warning">{{ product.name }}</h5>
+                    <p class="card-text flex-grow-1">{{ product.description }}</p>
+                    <div class="mt-auto">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="h5 mb-0 text-success">{{ product.price }} ريال</span>
+                            {% if user.is_superuser %}
+                            <div class="btn-group">
+                                <a href="{% url 'product_edit' product.id %}" class="btn btn-sm btn-warning">
+                                    <i class="fas fa-edit"></i> تعديل
+                                </a>
+                                <a href="{% url 'product_delete' product.id %}" class="btn btn-sm btn-danger">
+                                    <i class="fas fa-trash"></i> حذف
+                                </a>
+                            </div>
+                            {% elif user.is_authenticated %}
+                            <button type="button" 
+                                    class="btn btn-primary add-to-cart" 
+                                    onclick="addToCart(this)" 
+                                    data-product-id="{{ product.id }}" 
+                                    data-product-name="{{ product.name|escapejs }}">
+                                <i class="fas fa-shopping-cart"></i> أضف للسلة
+                            </button>
+                            {% else %}
+                            <a href="{% url 'login' %}" class="btn btn-secondary">
+                                <i class="fas fa-sign-in-alt"></i> سجل دخول للشراء
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        {% endfor %}
+    </div>
+</div>
+
+<!-- رسالة نجاح إضافة المنتج -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3">
+    <div id="cartToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header">
+            <strong class="me-auto">تم إضافة المنتج للسلة</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body">
+            <span id="cartToastBody"></span>
+        </div>
+    </div>
+</div>
+<script src="{% static 'js/cart.js' %}"></script>
+{% endblock %}
+
+

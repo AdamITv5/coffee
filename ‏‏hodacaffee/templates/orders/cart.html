@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+
+{% block title %}سلة المشتريات{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">سلة المشتريات</h2>
+    
+    {% if cart_items %}
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>المنتج</th>
+                        <th>السعر</th>
+                        <th>الكمية</th>
+                        <th>المجموع</th>
+                        <th>الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in cart_items %}
+                        <tr id="cart-item-{{ item.id }}">
+                            <td>{{ item.product.name }}</td>
+                            <td>{{ item.product.price }} ريال</td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <button class="btn btn-sm btn-outline-secondary" onclick="updateCart({{ item.id }}, 'decrease')">-</button>
+                                    <span class="btn btn-light">{{ item.quantity }}</span>
+                                    <button class="btn btn-sm btn-outline-secondary" onclick="updateCart({{ item.id }}, 'increase')">+</button>
+                                </div>
+                            </td>
+                            <td id="item-total-{{ item.id }}">{{ item.get_total_price }} ريال</td>
+                            <td>
+                                <button class="btn btn-danger btn-sm" onclick="updateCart({{ item.id }}, 'remove')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="3" class="text-end"><strong>المجموع الكلي:</strong></td>
+                        <td id="cart-total"><strong>{{ cart.get_total_price }} ريال</strong></td>
+                        <td></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+        
+        <div class="text-end mt-3">
+            <a href="{% url 'product_list' %}" class="btn btn-secondary">متابعة التسوق</a>
+            <a href="#" class="btn btn-success" onclick="submitOrder()">إتمام الطلب</a>
+        </div>
+    {% else %}
+        <div class="alert alert-info">
+            سلة المشتريات فارغة. <a href="{% url 'product_list' %}">تسوق الآن</a>
+        </div>
+    {% endif %}
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function updateCart(itemId, action) {
+    fetch(`/orders/cart/update/${itemId}/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: `action=${action}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.message === 'تم حذف المنتج من السلة') {
+            document.getElementById(`cart-item-${itemId}`).remove();
+            if (document.querySelector('tbody').children.length === 0) {
+                location.reload();
+            }
+        } else {
+            document.getElementById(`item-total-${itemId}`).textContent = `${data.item_total} ريال`;
+        }
+        document.getElementById('cart-total').textContent = `${data.cart_total} ريال`;
+    });
+}
+
+function submitOrder() {
+    fetch("{% url 'order_create' %}", {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            alert(data.message);
+            window.location.href = "{% url 'order_list' %}"; // الانتقال إلى قائمة الطلبات
+        } else {
+            alert(data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('حدث خطأ أثناء تقديم الطلب');
+    });
+}
+</script>
+{% endblock %}
